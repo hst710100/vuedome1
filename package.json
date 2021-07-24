@@ -5,16 +5,21 @@
   "author": "",
   "private": true,
   "scripts": {
-    "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
+    "dev": "webpack-dev-server --inline --progress --open --config build/webpack.dev.conf.js",
     "start": "npm run dev",
     "lint": "eslint --ext .js,.vue src",
     "lintfix": "eslint --ext .js,.vue src --fix",
     "build": "node build/build.js"
   },
   "dependencies": {
+    "axios": "^0.21.1",
+    "body-parser": "^1.19.0",
     "element-ui": "^2.15.3",
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
     "vue": "^2.5.2",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",

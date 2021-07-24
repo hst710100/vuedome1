@@ -8,6 +8,10 @@ import 'element-ui/lib/theme-chalk/index.css'; //组件样式，必须引入
 
 import '@/assets/publicstyle/login.css'
 
+import axios from 'axios'
+Vue.prototype.$axios = axios
+axios.defaults.baseURL = 'http://localhost:3000/api/Stu'
+
 Vue.config.productionTip = false
 
 Vue.use(ElementUI)
@@ -16,6 +20,7 @@ Vue.use(ElementUI)
 new Vue({
   el: '#app',
   router,
+  axios,
   // render:(h)=>h(App),
   components: { App },
   template: '<App/>'
