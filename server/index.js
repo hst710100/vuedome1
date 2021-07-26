@@ -3,13 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const bodyParser = require('body-parser')
 const express = require('express')
-var session = require("express-session");
 const app = express()
-app.use(session({
-    secret: 'keyboard cat',
-    resave: true,
-    saveUninitialized: true
-  }));
 //采用设置所有均可访问的方法解决跨域问题
 app.all("*", function (req, res, next) {
     //设置允许跨域的域名，*代表允许任意域名跨域

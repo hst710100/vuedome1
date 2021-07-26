@@ -39,26 +39,42 @@ export default {
     };
   },
   methods: {
-    LoginReq() {
-      this.$axios
-        .post("/showStu", { param: this.user })
-        .then((resp) => {
-          const {
-            data,code,msg
-          } = resp.data
-          if (code === 1) {
-            //ui组件提示
-            this.$message.success(msg)
-            this.$router.push({name:'home'})
-          }else{
-            this.$message.warning(msg)
-          }
-          console.log(resp);
-          console.log(data,code,msg);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    //异步的同步写法
+    async LoginReq() {
+      const resp = await this.$axios.post("/showStu", this.user);
+      //另一种写法，结果赋值给对应的对象名
+      const { token, code, msg } = resp.data;
+      if (code === 1) {
+        //ui组件提示
+        this.$message.success(msg);
+        //保存token到本地
+        localStorage.setItem('token',token)
+        this.$router.push({ name: "home" });
+      } else {
+        this.$message.warning(msg);
+      }
+      // console.log(resp);
+      // console.log(token,code,msg);
+      //异步请求响应
+      //   this.$axios
+      //     .post("/showStu",this.user)
+      //     .then((resp) => {
+      //       const {
+      //         data,code,msg
+      //       } = resp.data
+      //       if (code === 1) {
+      //         //ui组件提示
+      //         this.$message.success(msg)
+      //         this.$router.push({name:'home'})
+      //       }else{
+      //         this.$message.warning(msg)
+      //       }
+      //       console.log(resp);
+      //       console.log(data,code,msg);
+      //     })
+      //     .catch((err) => {
+      //       console.log(err);
+      //     });
     },
   },
 };
