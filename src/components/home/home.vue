@@ -15,18 +15,21 @@
     </el-header>
     <el-container>
       <el-aside width="200px" class="aside">
+        <!-- unique-opened下拉只能弹出一个 -->
+        <!-- router把index作为push路由 -->
         <el-menu
           :unique-opened=true
+          :router=true
         >
           <el-submenu index="1">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span>用户列表</span>
+              <span>用户管理</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="1-1">
+              <el-menu-item index="user">
                 <i class="el-icon-menu"></i>
-                <span>用户管理</span>
+                <span>用户列表</span>
               </el-menu-item>
             </el-menu-item-group>
           </el-submenu>
@@ -104,7 +107,10 @@
           </el-submenu>
         </el-menu>
       </el-aside>
-      <el-main class="main">Main</el-main>
+      <el-main class="main">
+        <!-- 在本组件里面的path路由跳转指定容器，path出口 -->
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -126,6 +132,7 @@ export default {
     exit(){
       //删除本地生成的token
       localStorage.clear('token')
+      
       this.$message.success("用户退出成功");
       //返回登录组件
       this.$router.push({name:'login'})
@@ -147,6 +154,7 @@ export default {
 }
 .main {
   background-color: #e9eef3;
+  padding: 10px;
 }
 .content {
   text-align: center;
