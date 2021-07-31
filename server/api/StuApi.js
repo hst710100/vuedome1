@@ -51,8 +51,9 @@ router.get('/userList', (req, resp) => {
   //sql语句
   // console.log(req.query);
   const { input, pagenum, pagesize, token } = req.query
-  //为每次上传一次当前页和分几页数据就重新获取
-  const sql = `select * from user limit ${(pagenum - 1) * pagesize},${pagesize}`
+  //为每次上传一次当前页和分几页数据就重新获取,搜索框查询关键字如果没有为全部查询
+  const sql = `select * from user WHERE username LIKE '%${input}%'  limit ${(pagenum - 1) * pagesize},${pagesize}`
+  console.log(req.query);
   //input   查询参数 可以为null
   //pagenum 当前页码
   //pagesize 显示条数

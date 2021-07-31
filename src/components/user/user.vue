@@ -11,8 +11,9 @@
         placeholder="请输入内容"
         v-model="input"
         class="input-with-select"
+        clearable
       >
-        <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-button @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
       </el-input>
       <el-button type="success" plain>添加用户</el-button>
     </el-row>
@@ -106,16 +107,21 @@ export default {
     this.userList();
   },
   methods: {
+    //搜索功能
+    searchUser(){
+      // console.log(this.input);
+      this.userList()
+    },
     //分页
     handleSizeChange(val) {
-      console.log(`每页 ${val} 条`);
+      // console.log(`每页 ${val} 条`);
       this.pagesize=val
       this.userList()
     },
     handleCurrentChange(val) {
       this.pagenum=val
       this.userList()
-      console.log(`当前页: ${val}`);
+      // console.log(`当前页: ${val}`);
     },
     async userList() {
       //获取管理员token值
@@ -127,7 +133,7 @@ export default {
           //input   查询参数 可以为null
           //pagenum 当前页码
           //pagesize 显示条数
-          input: "",
+          input: this.input,
           pagenum: this.pagenum,
           pagesize: this.pagesize,
           token: token,
@@ -141,7 +147,7 @@ export default {
         this.pagenum = num; //页码
         this.total = total; //总页码
         this.totalpage = totalpage; //能分几页
-        console.log(data);
+        // console.log(data);
       } else {
         this.$message.warning("token值无效");
       }
