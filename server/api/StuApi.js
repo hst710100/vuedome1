@@ -51,7 +51,8 @@ router.get('/userList', (req, resp) => {
   //sql语句
   // console.log(req.query);
   const { input, pagenum, pagesize, token } = req.query
-  const sql = `select * from user limit ${pagesize}`
+  //为每次上传一次当前页和分几页数据就重新获取
+  const sql = `select * from user limit ${(pagenum - 1) * pagesize},${pagesize}`
   //input   查询参数 可以为null
   //pagenum 当前页码
   //pagesize 显示条数
@@ -63,18 +64,10 @@ router.get('/userList', (req, resp) => {
   }
   //获取user数据总页码total,分页数totalpage
   var sql1 = `select count(*) as total from user`
-  var totalpage = 0;
+  //默认总条数为0
   var total = 0
   conn.query(sql1, (err, rs) => {
     total = rs[0].total
-    //默认总条数为0
-    // console.log(resp[0].total);
-    if (rs[0].total % 6 == 0) {
-      totalpage = rs[0].total / 4;
-    } else {
-      totalpage = parseInt(rs[0].total / 4) + 1;
-    }
-    // console.log(totalpage);
   })
   conn.query(sql, function (err, result) {
     //对token解密
@@ -84,11 +77,11 @@ router.get('/userList', (req, resp) => {
       resp.json({ msg: "token值无效",code:-1});
       return;
     }
+    // console.log(result);
     //查看数据查询结果,返回给客户端
     resp.json({
       data: result,
       msg: "管理员数据请求成功",
-      totalpage: totalpage,
       num: num,
       total: total,
       code:1,

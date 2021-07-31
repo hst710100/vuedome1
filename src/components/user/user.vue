@@ -18,16 +18,66 @@
     </el-row>
     <el-table :data="list" style="width: 100%">
       <el-table-column type="index" label="#" width="80"> </el-table-column>
-      <el-table-column prop="username" label="姓名" width="120"> </el-table-column>
+      <el-table-column prop="username" label="姓名" width="120">
+      </el-table-column>
       <el-table-column prop="email" label="邮箱" width="180"> </el-table-column>
       <el-table-column prop="telephone" label="电话" width="180">
       </el-table-column>
       <el-table-column prop="registTime" label="创建日期" width="100">
       </el-table-column>
       <el-table-column prop="state" label="用户状态" width="100">
+        <!-- 在ui组件里要添加另一个组件需要模板template -->
+        <!-- 通过slot-scope属性接收表格:data绑定的属性，在模板中进行相加{{scope.row}} -->
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          >
+          </el-switch>
+        </template>
       </el-table-column>
-      <el-table-column prop="date" label="操作"> </el-table-column>
+      <el-table-column label="操作">
+        <template>
+          <el-button
+            size="mini"
+            plain
+            type="primary"
+            icon="el-icon-edit"
+            circle
+          ></el-button>
+          <el-button
+            size="mini"
+            plain
+            type="danger"
+            icon="el-icon-delete"
+            circle
+          ></el-button>
+          <el-button
+            size="mini"
+            plain
+            type="success"
+            icon="el-icon-check"
+            circle
+          ></el-button>
+        </template>
+      </el-table-column>
     </el-table>
+    <!-- ui框架对应值和方法 -->
+    <!-- current-page当前页数 -->
+    <!-- page-size每页显示条目个数， -->
+    <!-- page-sizes接受一个整型数组，数组元素为展示的选择每页显示个数的选项， -->
+    <!-- page-size手动操作，不能动态改变，后面自己看情况办 -->
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pagenum"
+      :page-sizes="[3,6,9]"
+      :page-size="pagesize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    >
+    </el-pagination>
   </div>
 </template>
 
@@ -46,16 +96,27 @@ export default {
        */
       input: "",
       pagenum: 1,
-      pagesize: 4,
+      pagesize: 3,
       list: [],
-      total:0,
-      totalpage:0,
+      total: 0,
+      totalpage: 0,
     };
   },
   created() {
     this.userList();
   },
   methods: {
+    //分页
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.pagesize=val
+      this.userList()
+    },
+    handleCurrentChange(val) {
+      this.pagenum=val
+      this.userList()
+      console.log(`当前页: ${val}`);
+    },
     async userList() {
       //获取管理员token值
       const token = localStorage.getItem("token");
@@ -75,12 +136,14 @@ export default {
       // console.log(resp);
       const { code, data, msg, num, total, totalpage } = resp.data;
       if (code == 1) {
-        this.$message.success(msg);//ui提示
-        this.list=data //用户数据
-        this.pagenum = num  //页码
-        this.total=total    //总页码
-        this.totalpage=totalpage  //能分几页
-        // console.log(code,data,msg,num,total,totalpage);
+        this.$message.success(msg); //ui提示
+        this.list = data; //用户数据
+        this.pagenum = num; //页码
+        this.total = total; //总页码
+        this.totalpage = totalpage; //能分几页
+        console.log(data);
+      } else {
+        this.$message.warning("token值无效");
       }
     },
   },
