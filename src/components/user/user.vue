@@ -59,7 +59,9 @@
             type="primary"
             icon="el-icon-edit"
             circle
-          ></el-button>
+            @click="userEdit(scope.row)"
+          >
+          </el-button>
           <!-- scope.row.username接收删除的关键字传参 -->
           <el-button
             size="mini"
@@ -118,6 +120,24 @@
         <el-button type="primary" @click="userAdd()">确 定</el-button>
       </div>
     </el-dialog>
+    <el-dialog title="用户信息编辑" :visible.sync="editFormVisible">
+      <!-- form为绑定的数据信息 -->
+      <el-form :model="editList">
+        <el-form-item label="用户名" label-width="120px">
+          <el-input v-model="editList.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="120px">
+          <el-input v-model="editList.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="120px">
+          <el-input v-model="editList.telephone" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="EditFix()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -141,11 +161,18 @@ export default {
       total: 0,
       totalpage: 0,
       dialogFormVisible: false,
+      editFormVisible: false,
       form: {
         username: "",
         userpassword: "",
         email: "",
         telephone: "",
+      },
+      editList: {
+        username: "",
+        email: "",
+        telephone: "",
+        id:'',
       },
     };
   },
@@ -153,6 +180,30 @@ export default {
     this.userList();
   },
   methods: {
+    //用户编辑
+    userEdit(val) {
+      //获取数据并赋值给editList里面的各项
+      var { username, email, telephone,id } = val;
+      this.editList.username = username;
+      this.editList.email = email;
+      this.editList.telephone = telephone;
+      this.editList.id = id;
+      this.editFormVisible = true;
+      // console.log(username,email,telephone);
+    },
+    //编辑确认并更新视图
+    async EditFix() {
+      //添加无论成功与否关闭dialog
+      this.editFormVisible = false;
+      const rsp = await this.$axios.post("/editFix", this.editList);
+      //请求成功
+      if (rsp.data.code == 1) {
+        this.$message.success(rsp.data.msg); //ui提示
+        this.userList(); //更新视图
+      } else {
+        this.$message.warning(rsp.data.msg);
+      }
+    },
     //删除用户信息
     delUser(val) {
       this.$confirm("是否删除该用户?", "提示", {

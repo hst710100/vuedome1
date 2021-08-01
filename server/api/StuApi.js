@@ -134,4 +134,24 @@ router.get('/deluser', (req, resp) => {
     resp.json({ msg: '用户删除成功' })
   })
 })
+//编辑用户信息
+router.post('/editFix', (req, resp) => {
+  // console.log(req.body);
+  var { username, email, telephone, id } = req.body
+  //语句查询用户名是否存在并返回对应数据
+  var sql1 = `select * from user where username='${username}'`
+  conn.query(sql1, (err, result) => {
+    //已存在返回相应数据
+    if (result.length > 0) {
+      resp.json({ msg: '用户名已经存在重新输入', code: -1 })
+      return;
+    }
+    var sql = `update user set 
+    username='${username}',email='${email}',telephone='${telephone}'
+    where id=${id}`
+    conn.query(sql, (err, result) => {
+      resp.json({ msg: '编辑修改成功', code: 1 })
+    })
+  })
+})
 module.exports = router
