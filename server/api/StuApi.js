@@ -21,21 +21,35 @@ router.post('/showStu', (req, res) => {
   // var { username, userpassword } = req.body;
   // console.log(param)
   conn.query(sql, [param.username], function (err, result) {
-    console.log(param)
+    // console.log(param)
     if (err) {
       res.json({ code: -1, msg: "用户登录失败" });
     }
     if (result.length > 0) {
+      //生成值问题，条件不充分，管理员密码和名称要相同然后生成一个密钥为token的加密token值
+      //如果二个条件不相等生成一个其他的密钥，并且不能得到后台数据
       if (result[0].PASSWORD == param.userpassword) {
-        //对密码加密生成一个token值
-        const token = Token.encrypt({ id: param }, 'token', '1h');
-        // console.log(token);
-        res.json({
-          username: req.username,
-          token: token,
-          code: 1,
-          msg: "用户登录成功"
-        })
+        //管理员判断并给予权限
+        if (result[0].username == 'admin') {
+          //对密码加密生成一个token值
+          const token = Token.encrypt({ id: param }, 'token', '1h');
+          res.json({
+            username: req.username,
+            token: token,
+            code: 1,
+            msg: "管理员登录成功"
+          })
+        } else {
+          //对密码加密生成一个token值
+          const token = Token.encrypt({ id: param }, 'user', '1h');
+          // console.log(token);
+          res.json({
+            username: req.username,
+            token: token,
+            code: 1,
+            msg: "用户登录成功"
+          })
+        }
       } else {
         res.json({ code: -1, msg: "用户账号或密码错误" });
       }
@@ -52,8 +66,9 @@ router.get('/userList', (req, resp) => {
   // console.log(req.query);
   const { input, pagenum, pagesize, token } = req.query
   //为每次上传一次当前页和分几页数据就重新获取,搜索框查询关键字如果没有为全部查询
+  //密码也上传上去了，不够严谨
   const sql = `select * from user WHERE username LIKE '%${input}%'  limit ${(pagenum - 1) * pagesize},${pagesize}`
-  console.log(req.query);
+  // console.log(req.query);
   //input   查询参数 可以为null
   //pagenum 当前页码
   //pagesize 显示条数
@@ -71,11 +86,11 @@ router.get('/userList', (req, resp) => {
     total = rs[0].total
   })
   conn.query(sql, function (err, result) {
-    //对token解密
+    //对token解密,后面为密钥
     const data = Token.decrypt(token, 'token');
     //不是管理员token值无法获取数据
     if (!data.token) {
-      resp.json({ msg: "token值无效",code:-1});
+      resp.json({ msg: "token值无效", code: -1 });
       return;
     }
     // console.log(result);
@@ -85,8 +100,38 @@ router.get('/userList', (req, resp) => {
       msg: "管理员数据请求成功",
       num: num,
       total: total,
-      code:1,
+      code: 1,
     });
+  })
+})
+//用户添加
+router.post('/usersadd', (req, resp) => {
+  //接受vue提交的参数
+  const { username, userpassword, email, telephone } = req.body
+  // console.log(username, userpassword, email, telephone);
+  //语句查询用户名是否存在并返回对应数据
+  var sql1 = `select * from user where username='${username}'`
+  conn.query(sql1, (err, result) => {
+    //已存在返回相应数据
+    if (result.length > 0) {
+      resp.json({ msg: '用户名已经存在重新输入', code: -1 })
+      return;
+    }
+    //用户添加成功返回数据
+    var sql = `insert into user(username,PASSWORD,email,telephone) 
+    values('${username}','${userpassword}','${email}','${telephone}')`
+    conn.query(sql, (err, result) => {
+      resp.json({ msg: '用户添加成功', code: 1 })
+    })
+  })
+})
+//删除
+router.get('/deluser', (req, resp) => {
+  // console.log(req.query);
+  const { username } = req.query
+  const sql = `delete from user where username='${username}'`;
+  conn.query(sql, (err, result) => {
+    resp.json({ msg: '用户删除成功' })
   })
 })
 module.exports = router

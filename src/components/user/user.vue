@@ -1,22 +1,32 @@
 <template>
   <div class="index">
-    <!-- 面包屑 -->
+    <!-- 面包屑头部 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>用户管理</el-breadcrumb-item>
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
+    <!-- 输入框搜索，添加 -->
     <el-row class="top">
+      <!-- 当输入框清除的话自动触发clear事件 -->
       <el-input
         placeholder="请输入内容"
         v-model="input"
         class="input-with-select"
         clearable
+        @clear="searchUser()"
       >
-        <el-button @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
+        <el-button
+          @click="searchUser()"
+          slot="append"
+          icon="el-icon-search"
+        ></el-button>
       </el-input>
-      <el-button type="success" plain>添加用户</el-button>
+      <el-button type="success" plain @click="dialogFormoff()"
+        >添加用户</el-button
+      >
     </el-row>
+    <!-- 列表 -->
     <el-table :data="list" style="width: 100%">
       <el-table-column type="index" label="#" width="80"> </el-table-column>
       <el-table-column prop="username" label="姓名" width="120">
@@ -26,20 +36,23 @@
       </el-table-column>
       <el-table-column prop="registTime" label="创建日期" width="100">
       </el-table-column>
-      <el-table-column prop="state" label="用户状态" width="100">
+      <el-table-column label="用户状态" width="100">
         <!-- 在ui组件里要添加另一个组件需要模板template -->
         <!-- 通过slot-scope属性接收表格:data绑定的属性，在模板中进行相加{{scope.row}} -->
         <template slot-scope="scope">
+          <!-- active打开值 inactive关闭值 -->
           <el-switch
             v-model="scope.row.state"
             active-color="#13ce66"
             inactive-color="#ff4949"
+            active-value="1"
+            inactive-value="0"
           >
           </el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作">
-        <template>
+        <template slot-scope="scope">
           <el-button
             size="mini"
             plain
@@ -47,13 +60,16 @@
             icon="el-icon-edit"
             circle
           ></el-button>
+          <!-- scope.row.username接收删除的关键字传参 -->
           <el-button
             size="mini"
             plain
             type="danger"
             icon="el-icon-delete"
             circle
-          ></el-button>
+            @click="delUser(scope.row.username)"
+          >
+          </el-button>
           <el-button
             size="mini"
             plain
@@ -73,12 +89,35 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="pagenum"
-      :page-sizes="[3,6,9]"
+      :page-sizes="[3, 6, 9]"
       :page-size="pagesize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total"
     >
     </el-pagination>
+    <!-- 对话框，添加用户 -->
+    <!-- dialogFormVisible为true弹出dialog -->
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisible">
+      <!-- form为绑定的数据信息 -->
+      <el-form :model="form">
+        <el-form-item label="用户名" label-width="120px">
+          <el-input v-model="form.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" label-width="120px">
+          <el-input v-model="form.userpassword" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="120px">
+          <el-input v-model="form.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="120px">
+          <el-input v-model="form.telephone" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="userAdd()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -101,28 +140,81 @@ export default {
       list: [],
       total: 0,
       totalpage: 0,
+      dialogFormVisible: false,
+      form: {
+        username: "",
+        userpassword: "",
+        email: "",
+        telephone: "",
+      },
     };
   },
   created() {
     this.userList();
   },
   methods: {
+    //删除用户信息
+    delUser(val) {
+      this.$confirm("是否删除该用户?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          // console.log(val);
+          const rs = await this.$axios.get("/deluser", {
+            params: { username: val },
+          });
+          this.$message({
+            type: "success",
+            message: "删除成功!",
+          });
+          this.userList();
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
+    },
+    //添加用户按钮开关
+    dialogFormoff() {
+      this.dialogFormVisible = true;
+    },
+    //用户添加
+    async userAdd() {
+      //添加无论成功与否关闭dialog
+      this.dialogFormVisible = false;
+      const res = await this.$axios.post("/usersadd", this.form);
+      //请求成功
+      if (res.data.code == 1) {
+        this.$message.success(res.data.msg); //ui提示
+        this.form = {}; //清空对象
+        this.userList(); //更新视图
+      } else {
+        this.form = {}; //清空对象
+        this.$message.warning(res.data.msg);
+      }
+      // console.log(res);
+    },
     //搜索功能
-    searchUser(){
+    searchUser() {
       // console.log(this.input);
-      this.userList()
+      this.userList();
     },
     //分页
     handleSizeChange(val) {
       // console.log(`每页 ${val} 条`);
-      this.pagesize=val
-      this.userList()
+      this.pagesize = val;
+      this.userList();
     },
     handleCurrentChange(val) {
-      this.pagenum=val
-      this.userList()
+      this.pagenum = val;
+      this.userList();
       // console.log(`当前页: ${val}`);
     },
+    //数据列表
     async userList() {
       //获取管理员token值
       const token = localStorage.getItem("token");
@@ -147,9 +239,9 @@ export default {
         this.pagenum = num; //页码
         this.total = total; //总页码
         this.totalpage = totalpage; //能分几页
-        // console.log(data);
+        console.log(resp.data);
       } else {
-        this.$message.warning("token值无效");
+        this.$message.warning("token值无效,必须管理员权限");
       }
     },
   },
