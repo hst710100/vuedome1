@@ -4,6 +4,7 @@ const router = express.Router()
 const mysql = require('mysql')
 const $sql = require('../sqlMap')
 const Token = require("../token/jwt")
+const { lte } = require('semver')
 // 连接数据库
 const conn = mysql.createConnection(models.mysql)
 conn.connect()
@@ -138,20 +139,54 @@ router.get('/deluser', (req, resp) => {
 router.post('/editFix', (req, resp) => {
   // console.log(req.body);
   var { username, email, telephone, id } = req.body
-  //语句查询用户名是否存在并返回对应数据
-  var sql1 = `select * from user where username='${username}'`
-  conn.query(sql1, (err, result) => {
-    //已存在返回相应数据
-    if (result.length > 0) {
-      resp.json({ msg: '用户名已经存在重新输入', code: -1 })
-      return;
-    }
-    var sql = `update user set 
+  // //语句查询用户名是否存在并返回对应数据
+  // var sql1 = `select * from user where username='${username}'`
+  // conn.query(sql1, (err, result) => {
+  //   //已存在返回相应数据
+  //   if (result.length > 0) {
+  //     resp.json({ msg: '用户名已经存在重新输入', code: -1 })
+  //     return;
+  //   }
+  // })
+  var sql = `update user set 
     username='${username}',email='${email}',telephone='${telephone}'
     where id=${id}`
-    conn.query(sql, (err, result) => {
-      resp.json({ msg: '编辑修改成功', code: 1 })
+  conn.query(sql, (err, result) => {
+    resp.json({ msg: '编辑修改成功', code: 1 })
+  })
+})
+//修改用户状态
+router.get('/modifyState', (req, resp) => {
+  // console.log(req.query);
+  var { state, username } = req.query
+  var sql = `update user set state='${state}' where username='${username}'`
+  conn.query(sql, (err, result) => {
+    resp.json({ msg: '状态更新成功' })
+  })
+})
+//角色类别查询
+router.post('/roleInformation', (req, resp) => {
+  const { rolesuser } = req.body
+  // console.log(req.body);
+  //全部角色
+  var sql = 'SELECT roleid,role FROM roles'
+  conn.query(sql, (err, results) => {
+    // console.log(results);//全部角色名和对应的角色指定id
+    var sql1 = `SELECT roles.role,user.roleid FROM USER,roles 
+    WHERE user.username = '${rolesuser}' AND roles.roleid = user.roleid`
+    conn.query(sql1, (err, result) => {
+      resp.json({ roleAll: results, role: result[0] })
+      // console.log(result);
     })
+  })
+})
+//角色分配确认
+router.get('/rolesConfirm', (req, resp) => {
+  const { regionId, rolesuser } = req.query
+  // console.log(req.query);
+  var sql = `UPDATE USER SET roleid = ${regionId} WHERE username = '${rolesuser}'`
+  conn.query(sql, (err, result) => {
+    resp.json({msg:"角色分配成功"})
   })
 })
 module.exports = router

@@ -47,6 +47,7 @@
             inactive-color="#ff4949"
             active-value="1"
             inactive-value="0"
+            @change="modifyState(scope.row.state, scope.row.username)"
           >
           </el-switch>
         </template>
@@ -78,6 +79,7 @@
             type="success"
             icon="el-icon-check"
             circle
+            @click="userRoles(scope.row)"
           ></el-button>
         </template>
       </el-table-column>
@@ -97,7 +99,7 @@
       :total="total"
     >
     </el-pagination>
-    <!-- 对话框，添加用户 -->
+    <!-- 对话框，添加用户,编辑,分配 -->
     <!-- dialogFormVisible为true弹出dialog -->
     <el-dialog title="添加用户" :visible.sync="dialogFormVisible">
       <!-- form为绑定的数据信息 -->
@@ -124,7 +126,11 @@
       <!-- form为绑定的数据信息 -->
       <el-form :model="editList">
         <el-form-item label="用户名" label-width="120px">
-          <el-input v-model="editList.username" autocomplete="off"></el-input>
+          <el-input
+            :disabled="true"
+            v-model="editList.username"
+            autocomplete="off"
+          ></el-input>
         </el-form-item>
         <el-form-item label="邮箱" label-width="120px">
           <el-input v-model="editList.email" autocomplete="off"></el-input>
@@ -136,6 +142,34 @@
       <div slot="footer" class="dialog-footer">
         <el-button @click="editFormVisible = false">取 消</el-button>
         <el-button type="primary" @click="EditFix()">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="角色分配" :visible.sync="dialogFormRoles">
+      <el-form :model="roles">
+        <el-form-item label="用户名" label-width="120px">
+          {{ roles.rolesuser }}
+        </el-form-item>
+        <el-form-item label="角色" label-width="120px">
+          {{ regionId }}
+          <!-- v-model="region"为显示的下标值所对应的值，要后台查询后返回 -->
+          <el-select v-model="regionId">
+            <!-- disabled禁用 -->
+            <el-option label="请选择" :value="-1" disabled></el-option>
+            <!-- label要显示的内容,item为roles.roleAll值，i为下标值 -->
+            <el-option
+              :label="item.role"
+              :value="item.roleid"
+              v-for="(item, i) in roles.roleAll"
+              :key="i"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormRoles = false">取 消</el-button>
+        <el-button type="primary" @click="RolesConfirm()">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -162,6 +196,7 @@ export default {
       totalpage: 0,
       dialogFormVisible: false,
       editFormVisible: false,
+      dialogFormRoles: false,
       form: {
         username: "",
         userpassword: "",
@@ -172,18 +207,56 @@ export default {
         username: "",
         email: "",
         telephone: "",
-        id:'',
+        id: "",
       },
+      //角色
+      roles: {
+        rolesuser: "", //用户名
+        roleAll: [], //所有角色名
+      },
+      regionId: -1, //option显示的值,点击角色分配后获取每个角色的id并赋值
     };
   },
   created() {
     this.userList();
   },
   methods: {
+    //角色分配确认
+    async RolesConfirm() {
+      this.dialogFormRoles = false;
+      const rep = await this.$axios.get("/rolesConfirm", {
+        params: { regionId: this.regionId,rolesuser:this.roles.rolesuser },
+      });
+      this.$message.success(rep.data.msg)
+      this.userList();
+    },
+    //用户角色信息管理 √  参数user为list用户信息
+    async userRoles(user) {
+      // console.log(user);
+      // user.roleid  //用户角色值id
+      this.roles.roleAll = []; //添加后，再次访问数组要清空
+      this.roles.rolesuser = user.username;
+      this.dialogFormRoles = true;
+      const rsp = await this.$axios.post("/roleInformation", this.roles);
+      //服务端返回值角色并赋值{该用户角色，该用户id唯一，所有角色和id}
+      this.regionId = rsp.data.role.roleid; //下拉列表显示
+      this.roles.roleAll = rsp.data.roleAll;
+      console.log(this.roles);
+    },
+    //修改状态信息
+    async modifyState(state, userID) {
+      // console.log(val);
+      const rsp = await this.$axios.get("/modifyState", {
+        params: { state: state, username: userID },
+      });
+      // console.log(rsp);
+      this.$message.success(rsp.data.msg); //ui提示
+      this.userList();
+    },
     //用户编辑
     userEdit(val) {
       //获取数据并赋值给editList里面的各项
-      var { username, email, telephone,id } = val;
+      var { username, email, telephone, id } = val;
       this.editList.username = username;
       this.editList.email = email;
       this.editList.telephone = telephone;
@@ -285,7 +358,6 @@ export default {
       // console.log(resp);
       const { code, data, msg, num, total, totalpage } = resp.data;
       if (code == 1) {
-        this.$message.success(msg); //ui提示
         this.list = data; //用户数据
         this.pagenum = num; //页码
         this.total = total; //总页码
