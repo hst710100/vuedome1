@@ -41,17 +41,9 @@
             <el-menu-item-group>
               <el-menu-item index="2-1">
                 <i class="el-icon-menu"></i>
-                <span>用户管理</span>
-              </el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group>
-              <el-menu-item index="2-2">
-                <i class="el-icon-menu"></i>
                 <span>角色列表</span>
               </el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group>
-              <el-menu-item index="2-3">
+              <el-menu-item index="rights">
                 <i class="el-icon-menu"></i>
                 <span>权限列表</span>
               </el-menu-item>
@@ -99,7 +91,7 @@
               <span>数据统计</span>
             </template>
             <el-menu-item-group>
-              <el-menu-item index="5-1">
+              <el-menu-item index="reports">
                 <i class="el-icon-menu"></i>
                 <span>数据报表</span>
               </el-menu-item>

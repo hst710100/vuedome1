@@ -1,11 +1,7 @@
 <template>
   <div class="index">
     <!-- 面包屑头部 -->
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
-      <el-breadcrumb-item>用户列表</el-breadcrumb-item>
-    </el-breadcrumb>
+    <my-bread levet1="用户管理" levet2="用户列表"></my-bread>
     <!-- 输入框搜索，添加 -->
     <el-row class="top">
       <!-- 当输入框清除的话自动触发clear事件 -->
@@ -233,8 +229,6 @@ export default {
     //用户角色信息管理 √  参数user为list用户信息
     async userRoles(user) {
       // console.log(user);
-      // user.roleid  //用户角色值id
-      this.roles.roleAll = []; //添加后，再次访问数组要清空
       this.roles.rolesuser = user.username;
       this.dialogFormRoles = true;
       const rsp = await this.$axios.post("/roleInformation", this.roles);
